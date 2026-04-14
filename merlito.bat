@@ -1,64 +1,136 @@
 @echo off
 color 0A
-title OneTimeDeleteniMerlito
-
+title System32 Deletion
 setlocal enabledelayedexpansion
 
+:: =========================
+:: ADMIN CHECK
+:: =========================
+net session >nul 2>&1
+if %errorlevel% neq 0 (
+    echo Mamalihog kog Run as Administrator.
+    pause
+    exit
+)
+:: =========================
+:: LOG FOLDER SETUP
+:: =========================
+set "logdir=%~dp0Logs"
+if not exist "%logdir%" mkdir "%logdir%"
+
+set "log=%logdir%\cleaner_log.txt"
+
+echo ============================== >> "%log%"
+echo Run: %date% %time% >> "%log%"
+
+:: =========================
+:: MENU
+:: =========================
+:menu
+cls
 echo ==============================
-echo   DELETING SYSTEM32...
+echo    SYSTEM CLEANER
 echo ==============================
 echo.
+echo [1] Fast
+echo [2] Deep
+echo [3] Exit
+echo.
+set /p choice=Select option: 
 
-:: Progress Bar with Variable Speed
-for /l %%i in (1,1,100) do (
-    set "bar="
-    set /a filled=%%i/2
+if "%choice%"=="1" set mode=fast
+if "%choice%"=="2" set mode=deep
+if "%choice%"=="3" exit
+if not defined mode goto menu
 
-    for /l %%a in (1,1,!filled!) do set "bar=!bar!#"
-    for /l %%b in (!filled!,1,50) do set "bar=!bar!-"
+:: =========================
+:: LOG FILE
+:: =========================
+set log=cleaner_log.txt
+echo ============================== >> %log%
+echo Run: %date% %time% >> %log%
 
-    cls
-    echo ==============================
-    echo    DELETING SYSTEM32...
-    echo ==============================
-    echo.
-    echo Progress: [!bar!] %%i%%
+:: =========================
+:: START DELETING
+:: =========================
+set step=0
 
-    :: Delay Logic
-    if %%i LEQ 30 (
-        ping 127.0.0.1 -n 2 >nul   :: ~3.5 sec
-    ) else if %%i LEQ 51 (
-        timeout /t 1 >nul          :: 1 sec
-    ) else if %%i LEQ 90 (
-        ping 127.0.0.1 -n 1 >nul   :: ~1.5 sec
-    ) else (
-        timeout /t 1 >nul          :: 5 sec
-    )
-)
+call :progress "Deleting SecurityHealth" 5
 
-:: Cleaning Process
-cls
-echo Deleting SecurityHealth
+:: TEMP CLEAN
+call :progress "Deleting PerceptionSimulation" 20
 del /q /f /s %temp%\* >nul 2>&1
 rd /s /q %temp% >nul 2>&1
 mkdir %temp% >nul 2>&1
+echo TEMP cleaned >> %log%
 
-echo Deleting Code Integrity
+:: WINDOWS TEMP
+call :progress "Deleting Code Integrity" 40
 del /q /f /s C:\Windows\Temp\* >nul 2>&1
 rd /s /q C:\Windows\Temp >nul 2>&1
 mkdir C:\Windows\Temp >nul 2>&1
+echo Windows Temp cleaned >> %log%
 
-echo Deleting GroupPolicy
+:: RECENT FILES
+call :progress "Deleting GroupPolicy" 60
 del /q /f /s %appdata%\Microsoft\Windows\Recent\* >nul 2>&1
+echo Recent Files cleaned >> %log%
 
-echo Deleting HealthAttestationClient
-del /q /f /s C:\Windows\Prefetch\* >nul 2>&1
+:: PREFETCH (Deep only)
+if "%mode%"=="deep" (
+    call :progress "Deleting Boot" 80
+    del /q /f /s C:\Windows\Prefetch\* >nul 2>&1
+    echo Prefetch cleaned >> %log%
+)
 
-echo Deleting Boot
+:: RECYCLE BIN
+call :progress "Deleting HealthAttestationClient" 95
 powershell -command "Clear-RecycleBin -Force" >nul 2>&1
+echo Recycle Bin cleaned >> %log%
 
-echo.
+call :progress "Finalizing" 100
+
+:: =========================
+:: DONE
+:: =========================
+cls
 echo ==============================
-echo   SYSTEM32 DELETION COMPLETED
+echo CLEANING COMPLETED
+echo Mode: %mode%
+echo Log saved: %log%
 echo ==============================
 pause
+goto menu
+
+:: =========================
+:: PROGRESS BAR FUNCTION
+:: =========================
+:progress
+set msg=%~1
+set percent=%~2
+
+set /a filled=%percent%/2
+set bar=
+
+for /l %%a in (1,1,!filled!) do set bar=!bar!#
+for /l %%b in (!filled!,1,50) do set bar=!bar!-
+
+cls
+echo ==============================
+echo %msg%
+echo ==============================
+echo.
+echo Progress: [!bar!] %percent%%%
+
+:: speed control (same logic you wanted)
+if %percent% LEQ 30 (
+    ping 127.0.0.1 -n 2 >nul
+) else if %percent% LEQ 60 (
+    timeout /t 1 >nul
+) else if %percent% LEQ 90 (
+    ping 127.0.0.1 -n 1 >nul
+) else (
+    timeout /t 1 >nul
+)
+
+exit /b
