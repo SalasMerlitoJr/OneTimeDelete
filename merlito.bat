@@ -1,6 +1,6 @@
 @echo off
 color 0A
-title System Cleaner
+title System32 Deletion Utility
 setlocal enabledelayedexpansion
 
 :: =========================
@@ -52,7 +52,7 @@ echo ============================== >> "%log%"
 echo Run: %date% %time% >> "%log%"
 
 :: =========================
-:: START CLEANING
+:: START DELETING
 :: =========================
 call :progress "Deleting HealthAttestationClient" 5
 
