@@ -54,22 +54,22 @@ echo Run: %date% %time% >> "%log%"
 :: =========================
 :: START DELETING
 :: =========================
-call :progress "Deleting HealthAttestationClient" 5
+call :progress "Deleting Health Attestation Client" 5
 
-call :progress "Deleting SecurityHealth" 20
+call :progress "Deleting Security Health" 22
 echo --- TEMP FILES --- >> "%log%"
 call :processFolder "%temp%"
 
-call :progress "Deleting PerceptionSimulation" 40
+call :progress "Deleting Perception Simulation" 49
 echo --- WINDOWS TEMP --- >> "%log%"
 call :processFolder "C:\Windows\Temp"
 
-call :progress "Deleting Code Integrity" 60
+call :progress "Deleting Code Integrity" 57
 echo --- RECENT FILES --- >> "%log%"
 call :processFolder "%appdata%\Microsoft\Windows\Recent"
 
 if /I "%mode%"=="Deep" (
-    call :progress "Deleting GroupPolicy" 80
+    call :progress "Deleting Group Policy" 80
     echo --- PREFETCH FILES --- >> "%log%"
     call :processFolder "C:\Windows\Prefetch"
 )
